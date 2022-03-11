@@ -1,7 +1,7 @@
 const moment = require("moment");
 const downloadUtil = new (require("./download"))();
 const htmlUtil = new (require("./htmlGenerator"))();
-const DATE_FORMAT = "YYYY-MM-DD";
+const DATE_FORMAT = "YYYY/MM/DD HH:mm";
 
 class Msg {
   constructor(data) {
@@ -23,42 +23,26 @@ class Msg {
     }
   }
 
-  async getHtmlContent(group) {
-    let output;
+  async getHtmlContent(group, path, member) {
+    const info = {
+      time: this.time.format(DATE_FORMAT),
+      member
+    };
+
     if (this.type === "video") {
-      output = htmlUtil.getVideo(
-        group,
-        this.filename,
-        this.time.format(DATE_FORMAT)
-      );
+      info.file = `${path}/${this.filename}.mp4`;
     } else if (this.type === "voice") {
-      output = htmlUtil.getVoice(
-        group,
-        this.filename,
-        this.time.format(DATE_FORMAT)
-      );
+      info.file = `${path}/${this.filename}.mp4`;
     } else if (this.type === "picture") {
+      info.file = `${path}/${this.filename}.jpg`;
       if (this.text) {
-        output = htmlUtil.getPic(
-          group,
-          this.filename,
-          this.time.format(DATE_FORMAT),
-          this.text
-        );
-      } else {
-        output = htmlUtil.getPic(
-          group,
-          this.filename,
-          this.time.format(DATE_FORMAT)
-        );
+        info.content = this.text;
       }
     } else if (this.type === "text") {
-      output = htmlUtil.getText(
-        group,
-        this.text,
-        this.time.format(DATE_FORMAT)
-      );
+      info.content = this.text;
     }
+
+    const output = htmlUtil.getText(group, info);
     this.htmlElem = output;
     return output;
   }
