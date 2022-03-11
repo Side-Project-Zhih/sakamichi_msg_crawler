@@ -1,4 +1,6 @@
 const download = require("download");
+const fs = require('fs');
+
 class DownloadUtil {
   async picture(path, filename, url) {
     try {
@@ -33,6 +35,9 @@ class DownloadUtil {
     } catch (err) {
       console.error(err);
     }
+  }
+  async json(path, filename, content) {
+    await fs.promises.writeFile(`${path}/${filename}.json`, JSON.stringify(content))
   }
 }
 
