@@ -2,12 +2,18 @@ const ApiGenerator = require("./apiGenerator");
 const htmlUtil = new (require("./htmlGenerator"))();
 const downloadUtil = new (require("./download"))();
 const Msg = require("./msg");
+const DATE_FORMAT = "YYYY-MM-DD";
+const MEMBERS = require("./memberList");
+const GROUPS = require("./groupList");
+const mkdirp = require("mkdirp");
 
 class Group {
   constructor(group, refreshToken) {
     this.refreshToken = refreshToken;
     this.api = new ApiGenerator(group, refreshToken);
     this.group = group;
+    this.groupName = GROUPS[group].name;
+    this.memberList = MEMBERS[group];
   }
 
   async getAccessToken() {
@@ -29,10 +35,12 @@ class Group {
       data.forEach((item) => {
         const { subscription_detail } = item;
         delete item.id;
-
         const id = subscription_detail.groups[0];
+        const { name, category } = this.memberList[id];
         item.id = id;
-        item.name = this.memberMap[id].name;
+        item.name = name;
+        item.path = `./${this.groupName}/${category}/${name}`;
+        await mkdirp(item.path);
       });
 
       return data;
@@ -92,14 +100,18 @@ class Group {
           continue;
         }
 
-        currentDate = msg.time.format("YYYY-MM-DD");
+        currentDate = msg.time.format(DATE_FORMAT);
 
         if (!msgMap[currentDate]) {
           msgMap[currentDate] = [];
         }
 
-        await msg.downloadFile(path);
-        const htmlElem = msg.getHtmlContent(this.group, member.name);
+        await msg.downloadFile(`${path}/${currentDate}`);
+        const htmlElem = msg.getHtmlContent(
+          this.group,
+          `${path}/${currentDate}`,
+          member.name
+        );
 
         msgMap[currentDate].push(htmlElem);
 
@@ -108,7 +120,9 @@ class Group {
         }
 
         if (currentDate !== executeDate) {
-          const framework = htmlUtil.getFramework(this.group, member.name);
+          const framework = htmlUtil.getFramework(this.group, {
+            member: member.name,
+          });
           const content = msgMap[executeDate].join("/n");
           const output = framework.addContent(content);
 
@@ -117,7 +131,11 @@ class Group {
             JSON.stringify(output)
           );
 
-          await downloadUtil.html(path, msg.time.format("YYYY-MM-DD"), output);
+          await downloadUtil.html(
+            `${path}/${executeDate}`,
+            msg.time.format(DATE_FORMAT),
+            output
+          );
 
           executeDate = formatDate;
         }
@@ -125,15 +143,17 @@ class Group {
 
       // 該天的msg都已蒐集完成 開始做html
       if (!continuation) {
-        const framework = htmlUtil.getFramework(this.group);
+        const framework = htmlUtil.getFramework(this.group, {
+          member: member.name,
+        });
         const content = msgMap[executeDate].join("");
         const output = framework.addContent(content);
 
-        await downloadUtil.html(path, msg.time.format("YYYY-MM-DD"), output);
+        await downloadUtil.html(`${path}/${executeDate}`, executeDate, output);
 
         break;
       }
-      
+
       startDate = continuation.created_from;
       lastId = continuation.last_item.id;
       queryParams.startDate = startDate;
