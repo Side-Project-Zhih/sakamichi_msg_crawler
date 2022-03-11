@@ -1,12 +1,13 @@
 const ApiGenerator = require("./apiGenerator");
-const Member = require("./member");
-const HtmlGenerator = require("./htmlGenerator");
+const htmlUtil = new (require("./htmlGenerator"))();
+const downloadUtil = new (require("./download"))();
+const Msg = require("./msg");
 
 class Group {
   constructor(group, refreshToken) {
     this.refreshToken = refreshToken;
     this.api = new ApiGenerator(group, refreshToken);
-    this.htmlUtil = new HtmlGenerator(group);
+    this.group = group;
   }
 
   async getAccessToken() {
@@ -59,7 +60,83 @@ class Group {
   async fetchAllMemberData(date) {
     const members = await this.getSubscriptionMembers();
     for (const member of members) {
-      date = await this.getAllMsg(member, date);
+      await this.getAccessToken();
+      await this.getAllMsg(member, date);
+    }
+  }
+
+  async getAllMsg(member, startDate) {
+    let lastId;
+    let currentDate;
+    let executeDate;
+    const msgMap = {};
+
+    const queryParams = {
+      order: "asc",
+      startDate,
+      count: 200,
+    };
+
+    const path = member.path;
+
+    while (true) {
+      const { messages, continuation } = await this.getMessage(
+        member.id,
+        queryParams
+      );
+
+      for (const message of messages) {
+        const msg = new Msg(message);
+        // skip first data if continuation exist
+        if (msg.id === lastId) {
+          continue;
+        }
+
+        currentDate = msg.time.format("YYYY-MM-DD");
+
+        if (!msgMap[currentDate]) {
+          msgMap[currentDate] = [];
+        }
+
+        await msg.downloadFile(path);
+        const htmlElem = msg.getHtmlContent(this.group, member.name);
+
+        msgMap[currentDate].push(htmlElem);
+
+        if (!executeDate) {
+          executeDate = currentDate;
+        }
+
+        if (currentDate !== executeDate) {
+          const framework = htmlUtil.getFramework(this.group, member.name);
+          const content = msgMap[executeDate].join("/n");
+          const output = framework.addContent(content);
+
+          await fs.promises.writeFile(
+            `./${executeDate}.json`,
+            JSON.stringify(output)
+          );
+
+          await downloadUtil.html(path, msg.time.format("YYYY-MM-DD"), output);
+
+          executeDate = formatDate;
+        }
+      }
+
+      // 該天的msg都已蒐集完成 開始做html
+      if (!continuation) {
+        const framework = htmlUtil.getFramework(this.group);
+        const content = msgMap[executeDate].join("");
+        const output = framework.addContent(content);
+
+        await downloadUtil.html(path, msg.time.format("YYYY-MM-DD"), output);
+
+        break;
+      }
+      
+      startDate = continuation.created_from;
+      lastId = continuation.last_item.id;
+      queryParams.startDate = startDate;
     }
   }
 
@@ -82,128 +159,6 @@ class Group {
       }
       console.error("get member message error => ", err);
       return;
-    }
-  }
-
-  async getAllMsg(member, startDate) {
-    let lastId;
-    let currentDate;
-    let executeDate;
-    const msgMap = {};
-
-    const queryParams = {
-      order: "asc",
-      startDate,
-      count: 200,
-    };
-    const framework = this.htmlUtil.getFramework(member);
-    while (true) {
-      const { messages, continuation } = await this.getMessage(
-        member.id,
-        queryParams
-      );
-      for (const message of messages) {
-        // skip first data if continuation exist
-        if (message.id === lastId) {
-          continue;
-        }
-
-        currentDate = new Date(message.published_at);
-        const formatDate = `${currentDate.getFullYear()}-${
-          currentDate.getMonth() + 1
-        }-${currentDate.getDate()}`;
-
-        const { type, text } = message;
-        // //deal with text/pic/video
-
-        if (!msgMap[formatDate]) {
-          msgMap[formatDate] = [];
-        }
-
-        let htmlElem;
-        // //pic
-        if (type === "picture") {
-          // const picElem = transformToHtml(pic, "pic");
-          // await download(pic);
-
-          if (text) {
-            msgMap[formatDate].push({
-              name: "picture",
-              date: currentDate,
-              text,
-            });
-
-            htmlElem = this.htmlUtil.getPic(filename, text, time);
-          } else {
-            htmlElem = this.htmlUtil.getPic(filename, text, time);
-          }
-        }
-        // //video
-        else if (type === "video") {
-          // const videoElem = transformToHtml(pic, "video");
-          // await download(video);
-          // if (text) {
-          //   msgMap[formatDate].push({
-          //     name: "video",
-          //     date: currentDate,
-          //     text,
-          //   });
-          // } else {
-          //   msgMap[formatDate].push({ name: "video", date: currentDate });
-          // }
-          htmlElem = this.htmlUtil.getVideo(filename, time);
-        } else if (type === "voice") {
-          // const videoElem = transformToHtml(pic, "video");
-          // await download(video);
-          // if (text) {
-          //   msgMap[formatDate].push({
-          //     name: "voice",
-          //     date: currentDate,
-          //     text,
-          //   });
-          // } else {
-          //   msgMap[formatDate].push({ name: "voice", date: currentDate });
-          // }
-          htmlElem = this.htmlUtil.getVoice(filename, time);
-        }
-        // //text
-        else if (type === "text") {
-          // const textElem = transformToHtml(pic, "text");
-          htmlElem = this.htmlUtil.getText(filename, time);
-        }
-
-        msgMap[formatDate].push(htmlElem);
-
-        if (!executeDate) {
-          executeDate = formatDate;
-        }
-
-        if (formatDate !== executeDate) {
-          // const htmlContent = injectToTemplate(msgMap[executeDate]);
-          // const path = ``;
-          const content = msgMap[executeDate];
-          const output = framework.addContent(content);
-
-          await fs.promises.writeFile(
-            `./${executeDate}.json`,
-            JSON.stringify(output)
-          );
-          executeDate = formatDate;
-        }
-      }
-
-      // 該天的msg都已蒐集完成 開始做html
-      if (!continuation) {
-        const content = msgMap[executeDate];
-        await fs.promises.writeFile(
-          `./${executeDate}.json`,
-          JSON.stringify(content)
-        );
-        break;
-      }
-      startDate = continuation.created_from;
-      lastId = continuation.last_item.id;
-      queryParams.startDate = startDate;
     }
   }
 
