@@ -1,6 +1,6 @@
 const ApiGenerator = require("../constant/apiGenerator");
 const htmlUtil = new (require("../util/htmlGenerator"))();
-const downloadUtil = new (require('../util/download'))();
+const downloadUtil = new (require("../util/download"))();
 const Msg = require("./msg");
 const DATE_FORMAT = "YYYY-MM-DD";
 const MEMBERS = require("../constant/memberList");
@@ -45,7 +45,8 @@ class Group {
           (subscription.state === "expired" || subscription.state === "active")
         ) {
           const { name, category } = this.memberList[id];
-          member.path = `./${this.groupName}/${category}/${name}`;
+          member.category = category;
+          member.path = `/${this.groupName}/${category}/${name}`;
 
           await mkdirp(member.path);
           subscribeMember.push(member);
@@ -58,8 +59,7 @@ class Group {
         await this.getAccessToken();
         return await this.getSubscriptionMembers();
       }
-      console.error("get subscriptions error => ", err);
-      return;
+      throw new Error("get subscriptions error => ", err);
     }
   }
 
@@ -74,29 +74,46 @@ class Group {
     };
   }
 
-  async fetchAllMemberData(date) {
-    if (!date) {
-      date = moment(new Date()).toISOString();
-    }
-
+  async fetchAllMemberData(memberDateMap, newUpdateDate) {
     const members = await this.getSubscriptionMembers();
+
     for (const member of members) {
+      // if (member.id == 29) {
+      console.log(`${this.groupName} ${member.category} ${member.name} 下載中`);
+
+      const event = `${member.name} 下載完成`;
+
+      console.time(event);
       await this.getAccessToken();
-      await this.getAllMsg(member, date);
+
+      const date = memberDateMap[member.name];
+      const params = {
+        member,
+        startDate: date,
+      };
+      await this.getAllMsg(params);
+      memberDateMap[member.name] = newUpdateDate;
+      console.timeEnd(event);
+      // }
     }
   }
 
-  async getAllMsg(member, startDate) {
+  async getAllMsg(params) {
     let lastId;
     let currentDate;
     let executeDate;
     const msgMap = {};
 
+    const { member, startDate } = params;
+
     const queryParams = {
       order: "asc",
-      startDate,
       count: 200,
     };
+
+    if (startDate) {
+      queryParams.created_from = startDate;
+    }
 
     const path = member.path;
 
@@ -106,6 +123,10 @@ class Group {
         queryParams
       );
 
+      if (!messages || (messages && messages.length === 0)) {
+        return;
+      }
+
       for (const message of messages) {
         const msg = new Msg(message);
         // skip first data if continuation exist
@@ -113,20 +134,27 @@ class Group {
           continue;
         }
 
+        if (msg.type === "text" && !msg.text) {
+          continue;
+        }
+
         currentDate = msg.time.format(DATE_FORMAT);
+        await mkdirp(`./${path}/${currentDate}`);
 
         if (!msgMap[currentDate]) {
           msgMap[currentDate] = [];
         }
 
-        await msg.downloadFile(`${path}/${currentDate}`);
+        await msg.downloadFile(`.${path}/${currentDate}`);
         const htmlElem = msg.getHtmlContent(
           this.group,
           `${path}/${currentDate}`,
           member.name
         );
 
-        msgMap[currentDate].push(htmlElem);
+        if (htmlElem) {
+          msgMap[currentDate].push(htmlElem);
+        }
 
         if (!executeDate) {
           executeDate = currentDate;
@@ -136,21 +164,16 @@ class Group {
           const framework = htmlUtil.getFramework(this.group, {
             member: member.name,
           });
-          const content = msgMap[executeDate].join("/n");
+          const content = msgMap[executeDate].join("");
           const output = framework.addContent(content);
 
-          await fs.promises.writeFile(
-            `./${executeDate}.json`,
-            JSON.stringify(output)
-          );
-
           await downloadUtil.html(
-            `${path}/${executeDate}`,
-            msg.time.format(DATE_FORMAT),
+            `.${path}/${executeDate}`,
+            executeDate,
             output
           );
 
-          executeDate = formatDate;
+          executeDate = currentDate;
         }
       }
 
@@ -162,14 +185,13 @@ class Group {
         const content = msgMap[executeDate].join("");
         const output = framework.addContent(content);
 
-        await downloadUtil.html(`${path}/${executeDate}`, executeDate, output);
+        await downloadUtil.html(`.${path}/${executeDate}`, executeDate, output);
 
         break;
       }
 
-      startDate = continuation.created_from;
       lastId = continuation.last_item.id;
-      queryParams.startDate = startDate;
+      queryParams.created_from = continuation.created_from;
     }
   }
 
@@ -190,8 +212,8 @@ class Group {
         const token = await this.getAccessToken();
         return await this.getMessage(memberId, queryParams);
       }
-      console.error("get member message error => ", err);
-      return;
+
+      throw new Error("get member message error => ", err);
     }
   }
 

@@ -23,26 +23,29 @@ class Msg {
     }
   }
 
-  async getHtmlContent(group, path, member) {
+  getHtmlContent(group, path, member) {
     const info = {
       time: this.time.format(DATE_FORMAT),
-      member
+      member,
     };
-
+    let output;
     if (this.type === "video") {
-      info.file = `${path}/${this.filename}.mp4`;
+      info.file = `${this.filename}.mp4`;
+      output = htmlUtil.getVideo(group, info);
     } else if (this.type === "voice") {
-      info.file = `${path}/${this.filename}.mp4`;
+      info.file = `${this.filename}.mp4`;
+      output = htmlUtil.getVoice(group, info);
     } else if (this.type === "picture") {
-      info.file = `${path}/${this.filename}.jpg`;
+      info.file = `${this.filename}.jpg`;
       if (this.text) {
         info.content = this.text;
       }
-    } else if (this.type === "text") {
+      output = htmlUtil.getPic(group, info);
+    } else if (this.type === "text" && this.text) {
       info.content = this.text;
+      output = htmlUtil.getText(group, info);
     }
 
-    const output = htmlUtil.getText(group, info);
     this.htmlElem = output;
     return output;
   }

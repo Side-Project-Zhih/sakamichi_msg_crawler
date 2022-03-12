@@ -1,5 +1,6 @@
 const download = require("download");
-const fs = require('fs');
+const fs = require("fs");
+const axios = require("axios");
 
 class DownloadUtil {
   async picture(path, filename, url) {
@@ -13,7 +14,7 @@ class DownloadUtil {
   async video(path, filename, url) {
     try {
       const res = await axios(url, { responseType: "arraybuffer" });
-      await fs.promises.writeFile(`${path}/${filename}.mp4`, res.data);
+      await fs.promises.writeFile(`${path}/${filename}`, res.data);
       return true;
     } catch (err) {
       console.error(err);
@@ -22,7 +23,7 @@ class DownloadUtil {
   async voice(path, filename, url) {
     try {
       const res = await axios(url, { responseType: "arraybuffer" });
-      await fs.promises.writeFile(`${path}/${filename}.mp4`, res.data);
+      await fs.promises.writeFile(`${path}/${filename}`, res.data);
       return true;
     } catch (err) {
       console.error(err);
@@ -37,7 +38,10 @@ class DownloadUtil {
     }
   }
   async json(path, filename, content) {
-    await fs.promises.writeFile(`${path}/${filename}.json`, JSON.stringify(content))
+    await fs.promises.writeFile(
+      `${path}/${filename}.json`,
+      JSON.stringify(content)
+    );
   }
 }
 
