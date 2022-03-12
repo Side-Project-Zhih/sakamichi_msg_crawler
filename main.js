@@ -78,9 +78,10 @@ if (refreshToken) {
 }
 
 async function main(groupName, refreshToken) {
-  const groupSettings = require("./setting.json")[groupName];
-  // NN
-  if (!groupSettings.refreshToken && !refreshToken) {
+  const groupSettings = require("./setting.json");
+  const settings = groupSettings[[groupName]];
+
+  if (!settings.refreshToken && !refreshToken) {
     throw new Error("PLEASE input refresh token");
   }
 
@@ -88,28 +89,29 @@ async function main(groupName, refreshToken) {
     throw new Error("PLEASE input CORRECT refresh token");
   }
 
-  if (groupSettings.refreshToken && groupSettings.refreshToken.length !== 36) {
+  if (settings.refreshToken && settings.refreshToken.length !== 36) {
     throw new Error("PLEASE input CORRECT refresh token");
   }
 
-  if (groupSettings.refreshToken && refreshToken) {
-    groupSettings.refreshToken = refreshToken;
+  if (settings.refreshToken && refreshToken) {
+    settings.refreshToken = refreshToken;
   }
 
-  if (!groupSettings.refreshToken && refreshToken) {
-    groupSettings.refreshToken = refreshToken;
+  if (!settings.refreshToken && refreshToken) {
+    settings.refreshToken = refreshToken;
   }
 
-  if (groupSettings.refreshToken && !refreshToken) {
-    refreshToken = groupSettings.refreshToken;
+  if (settings.refreshToken && !refreshToken) {
+    refreshToken = settings.refreshToken;
   }
 
-  // const group = new Group(groupName, refreshToken);
-  // let date = moment.utc(new Date());
-  // const newUpdateDate = moment.utc(date.format("YYYYMMDD")).toISOString();
+  const group = new Group(groupName, refreshToken);
+  let date = moment.utc(new Date());
+  const newUpdateDate = moment.utc(date.format("YYYYMMDD")).toISOString();
 
-  // await group.fetchAllMemberData(settings.lastUpdateDate);
-
-  // settings.lastUpdateDate = newUpdateDate;
-  // await downloadUtil.json("./", "setting", groupSettings);
+  await group.fetchAllMemberData(settings.lastUpdateDate);
+  // b33a47c7-18cc-4a08-b62c-c5cca200b635
+  settings.lastUpdateDate = newUpdateDate;
+  await downloadUtil.json("./", "setting", groupSettings);
 }
+
