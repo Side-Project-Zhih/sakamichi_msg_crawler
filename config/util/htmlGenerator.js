@@ -1,4 +1,4 @@
-const TEMPLATE = require("./template");
+const TEMPLATE = require("../constant/template");
 
 class HtmlGenerator {
   getFramework(group, info) {

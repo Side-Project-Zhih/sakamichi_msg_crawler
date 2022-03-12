@@ -1,5 +1,5 @@
 const axios = require("axios");
-const MEMBERS  = require("./memberList");
+const MEMBERS  = require("./constant/memberList");
 const API_BASE = {
   GET_UPDATE_TOKEN: {
     nogi: "https://api.n46.glastonr.net/v2/update_token",
@@ -14,7 +14,7 @@ const API_BASE = {
     sakura: "https://api.s46.glastonr.net/v2/groups",
   },
 };
-class API_GENERATOR {
+class ApiGenerator {
   constructor(type, refreshToken) {
     this.updateTokenApi = API_BASE.GET_UPDATE_TOKEN[type];
     this.subscriptionApi = API_BASE.GET_SUBSCRIPTION[type];
@@ -24,4 +24,4 @@ class API_GENERATOR {
   }
 }
 
-module.exports = API_GENERATOR;
+module.exports = ApiGenerator;

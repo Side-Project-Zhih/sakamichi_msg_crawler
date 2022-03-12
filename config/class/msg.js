@@ -1,6 +1,6 @@
 const moment = require("moment");
-const downloadUtil = new (require("./download"))();
-const htmlUtil = new (require("./htmlGenerator"))();
+const downloadUtil = new (require("../util/download"))();
+const htmlUtil = new (require("../util/htmlGenerator"))();
 const DATE_FORMAT = "YYYY/MM/DD HH:mm";
 
 class Msg {

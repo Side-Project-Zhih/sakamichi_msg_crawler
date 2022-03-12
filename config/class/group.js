@@ -1,10 +1,10 @@
-const ApiGenerator = require("./apiGenerator");
-const htmlUtil = new (require("./htmlGenerator"))();
-const downloadUtil = new (require("./download"))();
+const ApiGenerator = require("../constant/apiGenerator");
+const htmlUtil = new (require("../util/htmlGenerator"))();
+const downloadUtil = new (require('../util/download'))();
 const Msg = require("./msg");
 const DATE_FORMAT = "YYYY-MM-DD";
-const MEMBERS = require("./memberList");
-const GROUPS = require("./groupList");
+const MEMBERS = require("../constant/memberList");
+const GROUPS = require("../constant/groupList");
 const mkdirp = require("mkdirp");
 const moment = require("moment");
 const axios = require("axios");
