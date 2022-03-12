@@ -58,7 +58,9 @@ async function main(groupName, refreshToken) {
   }
 
   if (settings.refreshToken && settings.refreshToken.length !== 36) {
-    throw new Error("PLEASE input CORRECT refresh token");
+    throw new Error(
+      "PLEASE input CORRECT refresh token. If you are first time, SHOULD set refresh token to empty string at setting.json"
+    );
   }
 
   if (settings.refreshToken && refreshToken) {
