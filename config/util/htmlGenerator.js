@@ -6,6 +6,7 @@ class HtmlGenerator {
     return this;
   }
   getPic(group, info) {
+    const {content} = info
     if (content) {
       return TEMPLATE[group].GET_PIC_TEXT(info);
     }
