@@ -1,6 +1,7 @@
 const Group = require("./config/class/group");
 const moment = require("moment");
 const yargs = require("yargs");
+const downloadUtil = new (require("./config/util/download"))();
 
 const args = yargs
   .options({
@@ -46,7 +47,7 @@ const {
   s_refresh_token,
   h_refresh_token,
 } = args;
-console.log(args);
+
 let group;
 let refreshToken;
 
@@ -79,7 +80,7 @@ if (refreshToken) {
 
 async function main(groupName, refreshToken) {
   const groupSettings = require("./setting.json");
-  const settings = groupSettings[[groupName]];
+  const settings = groupSettings[groupName];
 
   if (!settings.refreshToken && !refreshToken) {
     throw new Error("PLEASE input refresh token");
@@ -109,9 +110,6 @@ async function main(groupName, refreshToken) {
   let date = moment.utc(new Date());
   const newUpdateDate = moment.utc(date.format("YYYYMMDD")).toISOString();
 
-  await group.fetchAllMemberData(settings.lastUpdateDate);
-  // b33a47c7-18cc-4a08-b62c-c5cca200b635
-  settings.lastUpdateDate = newUpdateDate;
+  await group.fetchAllMemberData(settings.lastUpdateDate, newUpdateDate);
   await downloadUtil.json("./", "setting", groupSettings);
 }
-
