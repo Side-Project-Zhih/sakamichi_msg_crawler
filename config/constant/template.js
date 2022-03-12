@@ -1,7 +1,7 @@
 const TEMPLATE = {
   nogi: {
     GET_FRAMEWORK: (info) => {
-      const { member } = info;
+      const { member, date } = info;
       return (content) => `
       <!DOCTYPE html>
       <html lang="en">
@@ -21,7 +21,7 @@ const TEMPLATE = {
           <div data-v-25197153="" id="home">
             <div data-v-25197153="" class="container">
               <div data-v-25197153=""  spellcheck="false"
-                class="talk-header talk-header-nogi">${member}</div>
+                class="talk-header talk-header-nogi">${member}  ${date}</div>
               <div data-v-25197153=""><span data-v-25197153="">
                   ${content}
               </div>

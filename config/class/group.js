@@ -163,6 +163,7 @@ class Group {
         if (currentDate !== executeDate) {
           const framework = htmlUtil.getFramework(this.group, {
             member: member.name,
+            date: executeDate,
           });
           const content = msgMap[executeDate].join("");
           const output = framework.addContent(content);
@@ -181,6 +182,7 @@ class Group {
       if (!continuation) {
         const framework = htmlUtil.getFramework(this.group, {
           member: member.name,
+          date: executeDate
         });
         const content = msgMap[executeDate].join("");
         const output = framework.addContent(content);
