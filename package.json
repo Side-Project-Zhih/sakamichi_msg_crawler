@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^0.26.0",
     "download": "^8.0.0",
-    "mkdirp": "^1.0.4"
+    "mkdirp": "^1.0.4",
+    "moment": "^2.29.1"
   }
 }
