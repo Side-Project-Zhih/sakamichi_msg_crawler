@@ -6,6 +6,8 @@ const DATE_FORMAT = "YYYY-MM-DD";
 const MEMBERS = require("./memberList");
 const GROUPS = require("./groupList");
 const mkdirp = require("mkdirp");
+const moment = require("moment");
+const axios = require("axios");
 
 class Group {
   constructor(group, refreshToken) {
@@ -23,7 +25,9 @@ class Group {
         "X-Talk-App-ID": "jp.co.sonymusic.communication.sakurazaka 2.2",
       },
     });
+
     const { access_token } = res.data;
+    this.accessToken = access_token;
     return access_token;
   }
 
@@ -32,21 +36,26 @@ class Group {
       const headers = this.setAuthorization(this.accessToken);
       const { data } = await axios(this.api.subscriptionApi, headers);
 
-      data.forEach((item) => {
-        const { subscription_detail } = item;
-        delete item.id;
-        const id = subscription_detail.groups[0];
-        const { name, category } = this.memberList[id];
-        item.id = id;
-        item.name = name;
-        item.path = `./${this.groupName}/${category}/${name}`;
-        await mkdirp(item.path);
-      });
+      const subscribeMember = [];
+      for (const member of data) {
+        const { id, subscription } = member;
 
-      return data;
+        if (
+          subscription &&
+          (subscription.state === "expired" || subscription.state === "active")
+        ) {
+          const { name, category } = this.memberList[id];
+          member.path = `./${this.groupName}/${category}/${name}`;
+
+          await mkdirp(member.path);
+          subscribeMember.push(member);
+        }
+      }
+
+      return subscribeMember;
     } catch (err) {
       if (err.response) {
-        const token = await this.getAccessToken();
+        await this.getAccessToken();
         return await this.getSubscriptionMembers();
       }
       console.error("get subscriptions error => ", err);
@@ -66,6 +75,10 @@ class Group {
   }
 
   async fetchAllMemberData(date) {
+    if (!date) {
+      date = moment(new Date()).toISOString();
+    }
+
     const members = await this.getSubscriptionMembers();
     for (const member of members) {
       await this.getAccessToken();
@@ -183,7 +196,6 @@ class Group {
   }
 
   getMessageApi(memberId, queryParams) {
-    const memberId = this.info.id;
     let output = this.api.baseMessageApi + `/${memberId}/timeline?`;
     for (const key in queryParams) {
       output += `${key}=${queryParams[key]}&`;
