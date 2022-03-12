@@ -6,23 +6,19 @@ class HtmlGenerator {
     return this;
   }
   getPic(group, info) {
-    const { file, time, content, member } = info;
     if (content) {
-      return TEMPLATE[group].GET_PIC_TEXT;
+      return TEMPLATE[group].GET_PIC_TEXT(info);
     }
-    return TEMPLATE[group].GET_PIC;
+    return TEMPLATE[group].GET_PIC(info);
   }
   getText(group, info) {
-    const { file, time, content, member } = info;
-    return TEMPLATE[group].GET_TEXT;
+    return TEMPLATE[group].GET_TEXT(info);
   }
   getVoice(group, info) {
-    const { file, time, member } = info;
-    return TEMPLATE[group].GET_VOICE;
+    return TEMPLATE[group].GET_VOICE(info);
   }
   getVideo(group, info) {
-    const { file, time, member } = info;
-    return TEMPLATE[group].GET_VIDEO;
+    return TEMPLATE[group].GET_VIDEO(info);
   }
   addContent(content) {
     return this.framework(content);
