@@ -2,42 +2,9 @@ const Group = require("./config/class/group");
 const moment = require("moment");
 const yargs = require("yargs");
 const downloadUtil = new (require("./config/util/download"))();
+const COMMANDS = require("./config/constant/commandSetting");
 
-const args = yargs
-  .options({
-    nogizaka: {
-      // demandOption: true,
-      alias: "n",
-      describe: "chose group nogizaka",
-      boolean: true,
-    },
-    sakurataza: {
-      alias: "s",
-      describe: "chose group sakuraza",
-      boolean: true,
-    },
-    hinatazaka: {
-      alias: "h",
-      describe: "chose group hinatazaka",
-      boolean: true,
-    },
-    nogizaka_refresh_token: {
-      alias: "n_refresh_token",
-      describe: "please input nogizaka refresh token",
-      string: true,
-    },
-    sakurataza_refresh_token: {
-      alias: "s_refresh_token",
-      describe: "please input sakurataza refresh token",
-      string: true,
-    },
-    hinatazaka_refresh_token: {
-      alias: "h_refresh_token",
-      describe: "please input hinatazaka refresh tokn",
-      string: true,
-    },
-  })
-  .help().argv;
+const args = yargs.options(COMMANDS).help().argv;
 
 const {
   nogizaka,
