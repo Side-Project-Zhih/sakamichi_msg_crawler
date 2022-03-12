@@ -1,6 +1,6 @@
 const GROUP = {
   nogi: {
-    name: " 乃木坂46",
+    name: "乃木坂46",
   },
   sakura: {
     name: "櫻坂46",
