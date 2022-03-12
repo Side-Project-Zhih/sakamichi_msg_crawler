@@ -1,4 +1,4 @@
-module.exports.MEMBERS = {
+module.exports = {
   nogi: {
     1: {
       name: "秋元 真夏",
