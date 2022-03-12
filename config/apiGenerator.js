@@ -1,13 +1,13 @@
 const axios = require("axios");
-const { MEMBERS } = require("./memberList");
+const MEMBERS  = require("./memberList");
 const API_BASE = {
   GET_UPDATE_TOKEN: {
     nogi: "https://api.n46.glastonr.net/v2/update_token",
     sakura: "https://api.s46.glastonr.net/v2/update_token",
   },
   GET_SUBSCRIPTION: {
-    nogi: "https://api.n46.glastonr.net/v2/receipts",
-    sakura: "https://api.s46.glastonr.net/v2/receipts",
+    nogi: "https://api.n46.glastonr.net/v2/groups",
+    sakura: "https://api.s46.glastonr.net/v2/groups",
   },
   GET_MESSAGE: {
     nogi: "https://api.n46.glastonr.net/v2/groups",
