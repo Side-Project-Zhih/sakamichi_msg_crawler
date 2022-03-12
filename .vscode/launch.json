@@ -8,9 +8,10 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "help.js",
-      "program": "${workspaceFolder}/help.js",
-      "console": "integratedTerminal"
+      "name": "main.js",
+      "program": "${workspaceFolder}/main.js",
+      "console": "integratedTerminal",
+      "args":["-n"]
     }
   ]
 }
