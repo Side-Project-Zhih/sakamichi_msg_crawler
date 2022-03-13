@@ -55,10 +55,12 @@ class Group {
 
       return subscribeMember;
     } catch (err) {
+      console.error(err);
       if (err.response) {
         await this.getAccessToken();
         return await this.getSubscriptionMembers();
       }
+      console.error(err)
       throw new Error("get subscriptions error => ", err);
     }
   }
